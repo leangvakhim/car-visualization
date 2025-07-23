@@ -192,32 +192,6 @@ app.index_string = '''
     </body>
 </html>
 '''
-# Company's Type in X and Y is Engines, CC/Battery Capacity, HorsePower, Total Speed, Performance(0 - 100)KM/H, Seats
-# print(len(data['Company Names'].unique())) # 37
-# print(len(data))
-# print("len of Toyota is: ", len(data[data["Company Names"] == "TOYOTA"]))
-# print(data[data['Company Names'] == 'TOYOTA']['Fuel Types'].count())
-# print("Seats is: ", data[data['Company Names'] == 'TOYOTA']['Seats'].count())
-# print("Fuel Types is: ", data[data['Company Names'] == 'TOYOTA']['Fuel Types'].count())
-# print("Engines is: ", len(data[data['Company Names'] == 'TOYOTA']['Engines'].unique()))
-# print("Fuel Types is: ", len(data[data['Company Names'] == 'TOYOTA']['Fuel Types'].unique()))
-# print(len(data.groupby(['Company Names'] == 'TOYOTA').agg({'Fuel Types': 'count'})))
-# print("Not NA is: ",data['Total Speed'].notna().sum())
-# print("Data length is: ",len(data))
-# print("Not Null is: ",data['Total Speed'].notnull().sum())
-
-# print(data['Total Speed'].isna().sum())
-# print(data[data['Total Speed'].isna()]['Company Names'].unique())
-# print(data[data['Cars Prices'].isna()]['Company Names'].unique())
-
-# print("Unique Company Names:", data['Company Names'].nunique())
-# print(data['Company Names'].value_counts())
-
-# print(data['Company Names'].nunique())  # total distinct car companies
-# print(data['Total Speed'].nunique())    # total distinct speed values
-
-# # Group by Company Names and check who has the most distinct speeds
-# print(data.groupby('Company Names')['Total Speed'].nunique().sort_values(ascending=False))
 
 car_type = data['Company Names'].value_counts().reset_index()
 car_type.columns = ['Car Categorical', 'Amount of Car']
