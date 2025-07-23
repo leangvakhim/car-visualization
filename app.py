@@ -12,10 +12,18 @@ def load_data():
     if 'Total Speed' in data.columns:
         data['Total Speed'] = data['Total Speed'].str.replace(' km/h', '', regex=False) # regex=False mean treats the pattern as plain text
         data['Total Speed'] = pd.to_numeric(data['Total Speed'], errors='coerce') # errors='coerce' if value can't be converted it replace "N/A"
+        Q1 = data['Total Speed'].quantile(0.25)
+        Q3 = data['Total Speed'].quantile(0.75)
+        IQR = Q3 - Q1
+        data = data[(data['Total Speed'] >= Q1 - 1.5 * IQR) & (data['Total Speed'] <= Q3 + 1.5 * IQR)]
 
     if 'Performance(0 - 100 )KM/H' in data.columns:
         data['Performance(0 - 100 )KM/H'] = data['Performance(0 - 100 )KM/H'].str.replace(' sec', '', regex=False)
         data['Performance(0 - 100 )KM/H'] = pd.to_numeric(data['Performance(0 - 100 )KM/H'], errors='coerce')
+        Q1 = data['Performance(0 - 100 )KM/H'].quantile(0.25)
+        Q3 = data['Performance(0 - 100 )KM/H'].quantile(0.75)
+        IQR = Q3 - Q1
+        data = data[(data['Performance(0 - 100 )KM/H'] >= Q1 - 1.5 * IQR) & (data['Performance(0 - 100 )KM/H'] <= Q3 + 1.5 * IQR)]
 
     if 'CC/Battery Capacity' in data.columns:
         def convert_hp(val):
@@ -39,7 +47,12 @@ def load_data():
                 return (float(parts[0]) + float(parts[1])) / 2
 
             return None
+
         data['CC/Battery Capacity'] = data['CC/Battery Capacity'].apply(convert_hp)
+        Q1 = data['CC/Battery Capacity'].quantile(0.25)
+        Q3 = data['CC/Battery Capacity'].quantile(0.75)
+        IQR = Q3 - Q1
+        data = data[(data['CC/Battery Capacity'] >= Q1 - 1.5 * IQR) & (data['CC/Battery Capacity'] <= Q3 + 1.5 * IQR)]
 
     if 'HorsePower' in data.columns:
         data['HorsePower'] = data['HorsePower'].str.replace(' hp', '', regex=False)
@@ -85,6 +98,10 @@ def load_data():
 
             return float(val)
         data['HorsePower'] = data['HorsePower'].apply(convert_hp)
+        Q1 = data['HorsePower'].quantile(0.25)
+        Q3 = data['HorsePower'].quantile(0.75)
+        IQR = Q3 - Q1
+        data = data[(data['HorsePower'] >= Q1 - 1.5 * IQR) & (data['HorsePower'] <= Q3 + 1.5 * IQR)]
 
     if 'Seats' in data.columns:
         data['Seats'] = data['Seats'].str.strip()
@@ -266,11 +283,6 @@ def update_car_information_distribution(selected_info):
         ylabel_title = "Amount of Seats"
     else :
         ylabel_title = "Invalid"
-# {"label": "CC/Battery Capacity", "value": "CC/Battery Capacity"},
-# {"label": "HorsePower", "value": "HorsePower"},
-# {"label": "Total Speed", "value": "Total Speed"},
-# {"label": "Performance(0 - 100 )KM/H", "value": "Performance(0 - 100 )KM/H"},
-# {"label": "Seats", "value": "Seats"}
 
     fig = px.scatter(
         avg_df,
