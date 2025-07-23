@@ -68,12 +68,17 @@ app.layout = html.Div([
     html.Div([
         html.Div([
             html.H4("Fuel Type base on the Car's category", className="text-2xl font-semibold my-4 text-center"),
-            dcc.Dropdown(
-                id='car-fuel-filter',
-                options=[{"label": name, "value": name} for name in data['Company Names'].dropna().unique()],
-                value='Ford',
-            ),
-            dcc.Graph(id='car-fuel-distribution')
+            html.Div([
+                dcc.Dropdown(
+                    id='car-fuel-filter',
+                    options=[{"label": name, "value": name} for name in data['Company Names'].dropna().unique()],
+                    value='Ford',
+                    style={'width': '900px'}
+                )
+            ], className="flex justify-center mb-4"),
+            html.Div([
+                dcc.Graph(id='car-fuel-distribution', style={'width': '900px'})
+            ], className="flex justify-center")
         ])
     ], className="w-full mx-4 max-w-8xl")
 ])
