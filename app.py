@@ -119,6 +119,55 @@ def load_data():
             return float(val)
         data['Seats'] = data['Seats'].apply(convert_hp)
 
+    if 'Cars Prices' in data.columns:
+        data['Cars Prices'] = data['Cars Prices'].str.strip().str.replace('$', '', regex=False)
+
+        def convert_price(val):
+            if pd.isna(val):
+                return None
+
+            if '€' in val:
+                val = val.replace('€', '')
+                try:
+                    return float(val.replace(',', '')) * 1.17
+                except:
+                    return None
+
+            if '.00' in val:
+                val = val.replace('.00', '')
+
+            if '-' in val:
+                parts = val.split('-')
+                return (float(parts[0].replace(',', '')) + float(parts[1].replace(',', ''))) / 2
+
+            if ',' in val:
+                val = val.replace(',', '')
+
+            if '/' in val:
+                parts = val.split('/')
+                return (float(parts[0].replace(',', '')) + float(parts[1].replace(',', ''))) / 2
+
+            if 'up to' in val:
+                val = val.replace('up to ', '')
+
+            if '(est.)' in val:
+                val = val.replace(' (est.)', '')
+
+            if 'ï¿½' in val:
+                parts = val.split('ï¿½')
+                return (float(parts[0]) + float(parts[1])) / 2
+
+            if '-' in val:
+                parts = val.split('-')
+                return (float(parts[0]) + float(parts[1])) / 2
+
+            return float(val)
+        data['Cars Prices'] = data['Cars Prices'].apply(convert_price)
+        Q1 = data['Cars Prices'].quantile(0.25)
+        Q3 = data['Cars Prices'].quantile(0.75)
+        IQR = Q3 - Q1
+        data = data[(data['Cars Prices'] >= Q1 - 1.5 * IQR) & (data['Cars Prices'] <= Q3 + 1.5 * IQR)]
+
     return data
 data = load_data()
 
@@ -159,6 +208,7 @@ app.index_string = '''
 
 # print(data['Total Speed'].isna().sum())
 # print(data[data['Total Speed'].isna()]['Company Names'].unique())
+# print(data[data['Cars Prices'].isna()]['Company Names'].unique())
 
 # print("Unique Company Names:", data['Company Names'].nunique())
 # print(data['Company Names'].value_counts())
@@ -230,7 +280,39 @@ app.layout = html.Div([
                 )
             ], className="flex justify-center mb-4"),
             html.Div([
-                dcc.Graph(id='car-information-distribution', style={'width': '900px'})
+                dcc.Graph(id='car-information-distribution', style={'width': '900px', 'height': '600px'})
+            ], className="flex justify-center")
+        ])
+    ], className="w-full mx-4 max-w-8xl"),
+
+    # bubbleplot
+    html.Div([
+        html.Div([
+            html.H4("Car's price base on the speed", className="text-2xl font-semibold my-4 text-center"),
+            html.Div([
+                html.Div([
+                    dcc.RangeSlider(
+                        id='car-price-filter',
+                        min=data['Cars Prices'].min(),
+                        max=data['Cars Prices'].max(),
+                        value=[data['Cars Prices'].min(), data['Cars Prices'].max()],
+                        marks={
+                            int(value): f"${int(value):,}"
+                            for value in data["Cars Prices"].quantile([0, 1]).values
+                        },
+                        tooltip={
+                            "placement": "bottom",
+                            "always_visible": True,
+                        },
+                        step=int((data['Cars Prices'].max() - data['Cars Prices'].min()) / 100)
+                    )
+                ], style={
+                    'width': '100%',
+                    'padding': '0 10%'
+                })
+            ], className="flex justify-center"),
+            html.Div([
+                dcc.Graph(id='car-price-distribution', style={'width': '900px', 'height': '600px'})
             ], className="flex justify-center")
         ])
     ], className="w-full mx-4 max-w-8xl"),
@@ -298,7 +380,46 @@ def update_car_information_distribution(selected_info):
 
     return fig
 
+@app.callback(
+    Output('car-price-distribution', 'figure'),
+    Input('car-price-filter', 'value')
+)
+def update_car_price_distribution(selected_price):
+    filtered_data = data[
+        (data['Cars Prices'] >= selected_price[0]) &
+        (data['Cars Prices'] <= selected_price[1])
+    ]
+    fig = px.scatter(
+        filtered_data,
+        x='Cars Prices',
+        y='Total Speed',
+        size="Seats",
+        color='Company Names',
+        log_x=True,
+        custom_data=[
+            'Cars Names', 'HorsePower', 'Seats', 'Engines', 'Company Names', 'Fuel Types', "Performance(0 - 100 )KM/H"
+        ]
+    )
 
+
+    fig.update_traces(
+        hovertemplate="<b>Name:%{customdata[0]}</b><br>" +
+                    "HorsePower: %{customdata[1]:.0f} hp<br>" +
+                    "Seats: %{customdata[2]}<br>" +
+                    "Engine: %{customdata[3]}<br>" +
+                    "Model: %{customdata[4]}<br>" +
+                    "Fuel Type: %{customdata[5]}<br>" +
+                    "Performance (0-100)km/h: %{customdata[6]} sec<br>" +
+                    "Price: %{x:$,.0f}<br>" +
+                    "Speed: %{y} km/h"
+    )
+
+    fig.update_layout(
+        xaxis_title="Car Prices in dollars($)",
+        yaxis_title="Speed in km per hour"
+    )
+
+    return fig
 
 
 
