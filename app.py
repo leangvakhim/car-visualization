@@ -34,6 +34,13 @@ app.index_string = '''
 
 # print(len(data['Company Names'].unique())) # 37
 # print(len(data))
+# print("len of Toyota is: ", len(data[data["Company Names"] == "TOYOTA"]))
+# print(data[data['Company Names'] == 'TOYOTA']['Fuel Types'].count())
+# print("Seats is: ", data[data['Company Names'] == 'TOYOTA']['Seats'].count())
+# print("Fuel Types is: ", data[data['Company Names'] == 'TOYOTA']['Fuel Types'].count())
+# print("Engines is: ", len(data[data['Company Names'] == 'TOYOTA']['Engines'].unique()))
+# print("Fuel Types is: ", len(data[data['Company Names'] == 'TOYOTA']['Fuel Types'].unique()))
+# print(len(data.groupby(['Company Names'] == 'TOYOTA').agg({'Fuel Types': 'count'})))
 
 car_type = data['Company Names'].value_counts().reset_index()
 car_type.columns = ['Car Categorical', 'Amount of Car']
@@ -56,8 +63,74 @@ app.layout = html.Div([
                 )
             ], className="flex justify-center")
         ])
+    ], className="w-full mx-4 max-w-8xl"),
+
+    html.Div([
+        html.Div([
+            html.H4("Fuel Type base on the Car's category", className="text-2xl font-semibold my-4 text-center"),
+            dcc.Dropdown(
+                id='car-fuel-filter',
+                options=[{"label": name, "value": name} for name in data['Company Names'].dropna().unique()],
+                value='Ford',
+            ),
+            dcc.Graph(id='car-fuel-distribution')
+        ])
     ], className="w-full mx-4 max-w-8xl")
 ])
+
+# Create our Callbacks
+@app.callback(
+    Output('car-fuel-distribution', 'figure'),
+    Input('car-fuel-filter', 'value')
+)
+
+def update_car_fuel_distribution(selected_car):
+    if selected_car:
+        filtered_df = data[data['Company Names'] == selected_car]
+    else:
+        filtered_df = data
+
+    fuel_counts = filtered_df['Fuel Types'].value_counts().reset_index()
+    fuel_counts.columns = ['Fuel Types', 'Count']
+
+    fig = px.pie(
+        fuel_counts,
+        values='Count',
+        names='Fuel Types',
+        title=f'Fuel Type Distribution for {selected_car}'
+    )
+
+    return fig
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
